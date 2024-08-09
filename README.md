@@ -6,6 +6,7 @@ mumble library written in go. Intended for writing client side music bots.
 - the main.go is intended as example of how the music bot could look like.
 - Set server url, port and password via environment variables and then run gomble:
     ```
+    GOMBLE_LOGLEVEL=1 \
     GOMBLE_SERVER=mumbleserverurl \
     GOMBLE_PORT=64738 \
     GOMBLE_PASSWORD=mumbleserverpassword \
@@ -17,12 +18,20 @@ mumble library written in go. Intended for writing client side music bots.
 
 A Dockerfile is included, if you want to run gomble via Docker:
 
-1) ```docker build -t gomble:latest .```
-2) ```
-    docker run -e GOMBLE_SERVER=mumbleserverurl \
-    -e GOMBLE_PORT=64738 \
-    -e GOMBLE_PASSWORD=mumbleserverpassword \
+1) Rename `.env.example` to `.env` and enter your mumble server url and password
+2) Build Docker image with ```docker build -t gomble:latest .```
+3) Run container with
+    ```
+    docker run ---env-file .env
     gomble:latest
+    ```
+
+### docker-compose
+1) Rename `.env.example` to `.env` and enter your mumble server url and password
+2) Build Docker image with ```docker build -t gomble:latest .```
+3) Run container with
+    ```
+    docker-compose up -d
     ```
 
 ## Features
