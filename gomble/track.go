@@ -66,8 +66,11 @@ func GetCurrentTrack() *Track {
 }
 
 func Play(t *Track) bool { // {{{
-	if t.Done || currTrack != nil {
+	if t.Done {
 		return false
+	}
+	if currTrack != nil {
+		Stop()
 	}
 	currTrack = t
 	t.buffer_ms = 500 // buffering of 500 ms should be enough, I think...
@@ -103,7 +106,7 @@ func audioroutine(t *Track) { // {{{
 	opusbuf := make(chan []byte, t.buffer_ms/audioformats.OPUS_FRAME_DURATION) // make channel with buffer_ms/frame_duration number of frames as buffer
 	// our producer
 	go func() {
-		for true {
+		for {
 			opusPayload, err := getNextOpusFrame(t, enc)
 			if err != nil {
 				logger.Errorf("Could not get next opus frame: %v\n", err)
@@ -119,6 +122,8 @@ func audioroutine(t *Track) { // {{{
 			case opusbuf <- opusPayload:
 				break
 			case <-stop:
+				close(opusbuf)
+				stop <- false
 				return
 			}
 		}
