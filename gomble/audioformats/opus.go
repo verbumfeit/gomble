@@ -15,9 +15,11 @@ static int wopusEncoderCtlSetVbr(OpusEncoder *st, int vbr) {
 }
 */
 import "C"
-import "unsafe"
-import "errors"
-import "strconv"
+import (
+	"errors"
+	"strconv"
+	"unsafe"
+)
 
 // Possible constants to use
 const (
@@ -44,10 +46,9 @@ const (
 	// number of channels to use (2 for Stereo, 1 for Mono).
 	OPUS_CHANNELS = 2
 
-	//OPUS_BITRATE=128000 // Opus at 128 KB/s (VBR) is pretty much transparentk
+	OPUS_BITRATE=128000 // Opus at 128 KB/s (VBR) is pretty much transparentk
 	//-1 means MAX_BITRATE
 	// MAX_BITRATE means libopus will use as much space it can put in opus packets. So it's controlled by the MAX_PACKET_SIZE in some way.
-	OPUS_BITRATE = 40000
 
 	// size in pcm samples (1 sample is int16) (2 bytes = 1 sample) (480 frame_size = 960 bytes
 	// samplerate * frame_duration = frame_size = number of pcm sampels in one frame per channel
