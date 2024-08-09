@@ -31,12 +31,12 @@ const (
 	TRACK_TYPE_OGGFILE
 )
 
-var ytregex *regexp.Regexp = regexp.MustCompile(`https://www.youtube.com/watch\?v=([a-zA-Z0-9\-\_]+)`) // need to use ` character otherwise \character are recognized as escape characters
+var ytregex *regexp.Regexp = regexp.MustCompile(`https://(www\.)?youtu(be\.com|\.be)/(watch\?v=)?([a-zA-Z0-9\-\_]+)`) // need to use ` character otherwise \character are recognized as escape characters
 
 func LoadTrack(url string) (*Track, error) {
 	ytmatches := ytregex.FindStringSubmatch(url)
 	if len(ytmatches) > 0 {
-		surl := ytmatches[1]
+		surl := ytmatches[4]
 		var err error
 		var src tracksources.TrackSource
 		if _, err := os.Stat("/usr/bin/yt-dlp"); err == nil {
