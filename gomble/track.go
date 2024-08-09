@@ -3,14 +3,15 @@ package gomble
 import (
 	"errors"
 	"fmt"
-	"github.com/CodingVoid/gomble/gomble/audioformats"
-	"github.com/CodingVoid/gomble/gomble/tracksources"
-	"github.com/CodingVoid/gomble/gomble/tracksources/youtube"
-	"github.com/CodingVoid/gomble/logger"
 	"io"
 	"os"
 	"regexp"
 	"time"
+
+	"github.com/CodingVoid/gomble/gomble/audioformats"
+	"github.com/CodingVoid/gomble/gomble/tracksources"
+	"github.com/CodingVoid/gomble/gomble/tracksources/youtube"
+	"github.com/CodingVoid/gomble/logger"
 )
 
 type Track struct {
@@ -38,7 +39,7 @@ func LoadTrack(url string) (*Track, error) {
 		surl := ytmatches[1]
 		var err error
 		var src tracksources.TrackSource
-		if _, err := os.Stat("/bin/youtube-dl"); err == nil {
+		if _, err := os.Stat("/usr/bin/yt-dlp"); err == nil {
 			// use youtube-dl if it exists
 			src, err = youtube.NewYoutubedlVideo(surl)
 		} else {

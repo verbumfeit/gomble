@@ -3,12 +3,13 @@ package youtube
 import (
 	"encoding/json"
 	"fmt"
-	"github.com/CodingVoid/gomble/gomble/audioformats"
-	"github.com/CodingVoid/gomble/gomble/container/matroska"
-	"github.com/CodingVoid/gomble/logger"
 	"io"
 	"os/exec"
 	"runtime"
+
+	"github.com/CodingVoid/gomble/gomble/audioformats"
+	"github.com/CodingVoid/gomble/gomble/container/matroska"
+	"github.com/CodingVoid/gomble/logger"
 )
 
 type YoutubedlVideo struct {
@@ -39,7 +40,7 @@ type YoutubedlFormat struct {
 func NewYoutubedlVideo(path string) (*YoutubedlVideo, error) { // {{{
 	var video YoutubedlVideo
 
-	cmd := exec.Command("youtube-dl", "-j", path)
+	cmd := exec.Command("yt-dlp", "-j", path)
 	buf, err := cmd.Output()
 	if err != nil {
 		_, file, line, _ := runtime.Caller(0)
