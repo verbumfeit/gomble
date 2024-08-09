@@ -32,12 +32,12 @@ func OnPrivateMessageReceived(e gomble.PrivateMessageReceivedEvent) {
 func OnChannelMessageReceived(e gomble.ChannelMessageReceivedEvent) {
 	if strings.HasPrefix(e.Message, "#play ") {
 		logger.Debugf(e.Message + "\n")
-		yt, err := gomble.LoadTrack(e.Message)
+		tracklist, err := gomble.LoadUrl(e.Message)
 		if err != nil {
 			logger.Errorf("%v", err)
 			return
 		}
-		queue = append(queue, yt)
+		queue = tracklist
 		startNextTrack()
 	} else if strings.HasPrefix(e.Message, "#play") {
 		startNextTrack()
@@ -48,7 +48,7 @@ func OnChannelMessageReceived(e gomble.ChannelMessageReceivedEvent) {
 	} else if strings.HasPrefix(e.Message, "#resume") {
 		gomble.Resume()
 	} else if strings.HasPrefix(e.Message, "#add") {
-		addTrackToQueue(e.Message)
+		addToQueue(e.Message)
 	} else if strings.HasPrefix(e.Message, "#next") {
 		startNextTrack()
 	} else if strings.HasPrefix(e.Message, "#list") {
@@ -76,15 +76,15 @@ func OnTrackException(e gomble.TrackExceptionEvent) {
 	logger.Warnf("Got an Exception while playing Track: %s", e.Track.GetTitle())
 }
 
-func addTrackToQueue(message string) {
+func addToQueue(message string) {
 	logger.Debugf(message + "\n")
-		t, err := gomble.LoadTrack(message)
+		tracklist, err := gomble.LoadUrl(message)
 		if err != nil {
 			logger.Errorf("%v", err)
 			return
 		}
-		queue = append(queue, t)
-		gomble.SendMessageToChannel("Added track <b>" + t.GetTitle() + "</b> to queue", gomble.BotUserState.ChannelId)
+		queue = append(queue, tracklist...)
+		// gomble.SendMessageToChannel("Added track <b>" + t.GetTitle() + "</b> to queue", gomble.BotUserState.ChannelId)
 }
 
 func startNextTrack() {

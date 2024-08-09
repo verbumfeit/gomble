@@ -5,7 +5,11 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"os/exec"
 	"regexp"
+	"runtime"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/CodingVoid/gomble/gomble/audioformats"
@@ -31,29 +35,81 @@ const (
 	TRACK_TYPE_OGGFILE
 )
 
-var ytregex *regexp.Regexp = regexp.MustCompile(`https://(www\.)?youtu(be\.com|\.be)/(watch\?v=)?([a-zA-Z0-9\-\_]+)`) // need to use ` character otherwise \character are recognized as escape characters
+var yttrackregex *regexp.Regexp = regexp.MustCompile(`https://(www\.)?youtu(be\.com|\.be)/(watch\?v=)?([a-zA-Z0-9\-\_]+)`) // need to use ` character otherwise \character are recognized as escape characters
+var ytplaylistregex *regexp.Regexp = regexp.MustCompile(`https://(www\.)?youtube\.com/(playlist\?list=)([a-zA-Z0-9\-\_]+)`)
 
-func LoadTrack(url string) (*Track, error) {
-	ytmatches := ytregex.FindStringSubmatch(url)
-	if len(ytmatches) > 0 {
-		surl := ytmatches[4]
-		var err error
-		var src tracksources.TrackSource
-		if _, err := os.Stat("/usr/bin/yt-dlp"); err == nil {
-			// use youtube-dl if it exists
-			src, err = youtube.NewYoutubedlVideo(surl)
-		} else {
-			// otherwise use native youtube stream implementation (probably doesn't work, but worth a try)
-			// src, err = youtube.NewYoutubeVideo(surl)
-			logger.Fatalf("No Youtube-dl installed. exiting\n")
-		}
+func LoadTrack(id string) (*Track, error) {
+	var err error
+	var src tracksources.TrackSource
+	if _, err := os.Stat("/usr/bin/yt-dlp"); err == nil {
+		// use youtube-dl if it exists
+		src, err = youtube.NewYoutubedlVideo(id)
 		if err != nil {
-			return nil, err
+			logger.Errorf("error creating video: %d", err)
 		}
-		return &Track{
-			trackSrc: src,
-		}, nil
+	} else {
+		// otherwise use native youtube stream implementation (probably doesn't work, but worth a try)
+		// src, err = youtube.NewYoutubeVideo(surl)
+		logger.Fatalf("No Youtube-dl installed. exiting\n")
 	}
+	if err != nil {
+		return nil, err
+	}
+	return &Track{
+		trackSrc: src,
+	}, nil
+}
+
+func LoadPlaylist(id string) ([]*Track, error) {
+	var idlist []string
+	var tracklist []*Track
+
+	// get all video ids
+	cmd := exec.Command("yt-dlp", "--flat-playlist", "--print", "id", id)
+	buf, err := cmd.Output()
+	if err != nil {
+		_, file, line, _ := runtime.Caller(0)
+		return nil, fmt.Errorf("LoadPlaylist(%s:%d): %w", file, line, err)
+	}
+
+	// turn command results into slice of ids
+	idstring := string(buf)
+	idlist = strings.Split(idstring, "\n")
+	
+	logger.Infof("Got playlist of length ", strconv.Itoa(len(idlist)))
+
+
+	for _, id := range idlist {
+		track, err := LoadTrack(id)
+		if err != nil {
+			logger.Errorf("Could not load track: ", id)
+			continue
+		}
+		tracklist = append(tracklist, track)
+	}
+
+	return tracklist, nil
+}
+
+func LoadUrl(url string) ([]*Track, error) {
+	var tracklist []*Track
+
+	ytplaylistmatches := ytplaylistregex.FindStringSubmatch(url)
+	yttrackmatches := yttrackregex.FindStringSubmatch(url)
+
+	if len(ytplaylistmatches) > 0 {
+		// we have a playlist
+		id := ytplaylistmatches[3]
+		logger.Infof("LISTID:"+id) 
+		tracklist, _ := LoadPlaylist(id)
+		return tracklist, nil
+	} else if len(yttrackmatches) > 0 {
+		// we have a single track
+		id := yttrackmatches[4]
+		track, _ := LoadTrack(id)
+		tracklist = append(tracklist, track)
+		return tracklist, nil
+	} 
 	return nil, errors.New("LoadTrack (track.go): No Youtube Video Found under URL")
 }
 
