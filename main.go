@@ -1,6 +1,7 @@
 package main
 
 import (
+	"os"
 	"strings"
 
 	"github.com/CodingVoid/gomble/gomble"
@@ -11,7 +12,7 @@ import (
 var queue []*gomble.Track
 
 func main() {
-	gomble.Init(logger.TRACE, "127.0.0.1:64738", false)
+	gomble.Init(logger.TRACE, os.Getenv("GOMBLE_SERVER")+":"+os.Getenv("GOMBLE_PORT"), false)
 	gomble.Listener.OnPrivateMessageReceived = OnPrivateMessageReceived
 	gomble.Listener.OnChannelMessageReceived = OnChannelMessageReceived
 	gomble.Listener.OnTrackFinished = OnTrackFinished

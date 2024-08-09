@@ -3,6 +3,7 @@ package gomble
 import (
 	"crypto/tls"
 	"net"
+	"os"
 
 	"github.com/golang/protobuf/proto"
 
@@ -68,7 +69,7 @@ func Begin() {
 	}
 	authPacket := mumbleproto.Authenticate{
 		Username: proto.String("gomble-bot"),
-		Password: proto.String(""),
+		Password: proto.String(os.Getenv("GOMBLE_PASSWORD")),
 		Opus:     proto.Bool(true),
 		Tokens:   nil,
 	}
