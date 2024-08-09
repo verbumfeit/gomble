@@ -1,0 +1,9 @@
+name: gomble
+services:
+  gomble:
+    image: gomble:latest
+    container_name: gomble
+    env_file:
+      - .env
+    restart: always
+networks: {}
