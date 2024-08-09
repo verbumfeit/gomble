@@ -2,6 +2,7 @@ package main
 
 import (
 	"os"
+	"strconv"
 	"strings"
 
 	"github.com/CodingVoid/gomble/gomble"
@@ -12,7 +13,8 @@ import (
 var queue []*gomble.Track
 
 func main() {
-	gomble.Init(logger.TRACE, os.Getenv("GOMBLE_SERVER")+":"+os.Getenv("GOMBLE_PORT"), false)
+	loglevel, _ := strconv.Atoi(os.Getenv("GOMBLE_LOGLEVEL"))
+	gomble.Init(logger.Loglevel(loglevel), os.Getenv("GOMBLE_SERVER")+":"+os.Getenv("GOMBLE_PORT"), false)
 	gomble.Listener.OnPrivateMessageReceived = OnPrivateMessageReceived
 	gomble.Listener.OnChannelMessageReceived = OnChannelMessageReceived
 	gomble.Listener.OnTrackFinished = OnTrackFinished
