@@ -53,10 +53,15 @@ func OnChannelMessageReceived(e gomble.ChannelMessageReceivedEvent) {
 		startNextTrack()
 	} else if strings.HasPrefix(e.Message, "#list") {
 		var list string
-		for _, item := range queue {
-			list = list + "<br /> " + item.GetTitle()
+		for _, track := range queue {
+			list = list + "<br /> " + track.GetTitle()
 		}
-		gomble.SendMessageToChannel("<br /><b>Queue</b>:<br />" + list, gomble.BotUserState.ChannelId)
+
+		if gomble.GetCurrentTrack() != nil {
+			gomble.SendMessageToChannel("<br /><b>Now playing: </b>"+gomble.GetCurrentTrack().GetTitle()+"<br /><br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
+		} else {
+			gomble.SendMessageToChannel("<br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
+		}
 	}
 }
 
@@ -78,13 +83,16 @@ func OnTrackException(e gomble.TrackExceptionEvent) {
 
 func addToQueue(message string) {
 	logger.Debugf(message + "\n")
-		tracklist, err := gomble.LoadUrl(message)
-		if err != nil {
-			logger.Errorf("%v", err)
-			return
-		}
-		queue = append(queue, tracklist...)
-		// gomble.SendMessageToChannel("Added track <b>" + t.GetTitle() + "</b> to queue", gomble.BotUserState.ChannelId)
+	tracklist, err := gomble.LoadUrl(message)
+	if err != nil {
+		logger.Errorf("%v", err)
+		return
+	}
+	queue = append(queue, tracklist...)
+
+	for _, track := range tracklist {
+		gomble.SendMessageToChannel("Added track <b>"+track.GetTitle()+"</b> to queue", gomble.BotUserState.ChannelId)
+	}
 }
 
 func startNextTrack() {
@@ -92,7 +100,7 @@ func startNextTrack() {
 		t := queue[0]
 		// returns false if a track is already playing (or t == nil). returns true if starting was successful
 		if gomble.Play(t) {
-			gomble.SendMessageToChannel("Start playing Track <b>" + t.GetTitle() + "</b>", gomble.BotUserState.ChannelId)
+			gomble.SendMessageToChannel("Start playing Track <b>"+t.GetTitle()+"</b>", gomble.BotUserState.ChannelId)
 			// If successful remove the track from the queue
 			queue = queue[1:]
 		}
