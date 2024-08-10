@@ -46,7 +46,7 @@ const (
 	// number of channels to use (2 for Stereo, 1 for Mono).
 	OPUS_CHANNELS = 2
 
-	OPUS_BITRATE=128000 // Opus at 128 KB/s (VBR) is pretty much transparentk
+	OPUS_BITRATE=192000 // Opus at 128 KB/s (VBR) is pretty much transparentk
 	//-1 means MAX_BITRATE
 	// MAX_BITRATE means libopus will use as much space it can put in opus packets. So it's controlled by the MAX_PACKET_SIZE in some way.
 
