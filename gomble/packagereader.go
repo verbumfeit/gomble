@@ -19,13 +19,13 @@ func readRoutine() { // {{{
 		pckType, pcksize, err := receivePacket(data[:])
 		//logger.Debugf("Received entire Package")
 		if err != nil {
-			conn.Close()
-			logger.Fatalf("Could not receive tcp packet: " + err.Error())
+			//conn.Close()
+			logger.Debugf("Could not receive tcp packet: " + err.Error())
+		} else {
+			printReceivedPackage(pckType, data[:pcksize])
+			handlePacket(pckType, data[:pcksize])
 		}
-		printReceivedPackage(pckType, data[:pcksize])
-		handlePacket(pckType, data[:pcksize])
 	}
-
 } // }}}
 
 func receivePacket(buffer []byte) (uint16, uint32, error) { // {{{
