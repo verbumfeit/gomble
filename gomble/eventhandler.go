@@ -5,7 +5,7 @@ import (
 	"net"
 	"os"
 
-	"github.com/golang/protobuf/proto"
+	"google.golang.org/protobuf/proto"
 
 	"github.com/CodingVoid/gomble/logger"
 	"github.com/CodingVoid/gomble/mumbleproto"
