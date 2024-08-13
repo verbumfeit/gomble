@@ -32,6 +32,8 @@ func OnPrivateMessageReceived(e gomble.PrivateMessageReceivedEvent) {
 func OnChannelMessageReceived(e gomble.ChannelMessageReceivedEvent) {
 	if strings.HasPrefix(e.Message, "#play ") {
 		logger.Debugf(e.Message + "\n")
+		gomble.SendMessageToChannel("<b>Loading...</b>", gomble.BotUserState.ChannelId)
+
 		tracklist, err := gomble.LoadUrl(e.Message)
 		if err != nil {
 			logger.Errorf("%v", err)
@@ -58,10 +60,31 @@ func OnChannelMessageReceived(e gomble.ChannelMessageReceivedEvent) {
 		}
 
 		if gomble.GetCurrentTrack() != nil {
-			gomble.SendMessageToChannel("<br /><b>Now playing: </b>"+gomble.GetCurrentTrack().GetTitle()+"<br /><br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
+			gomble.SendMessageToChannel("<br /><br /><b>Now playing: </b>"+gomble.GetCurrentTrack().GetTitle()+"<br /><br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
+		} else if len(queue) > 0 {
+			gomble.SendMessageToChannel("<br /><br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
 		} else {
-			gomble.SendMessageToChannel("<br /><b>Next up: </b><br />"+list+"<br />", gomble.BotUserState.ChannelId)
+			gomble.SendMessageToChannel("<br /><br /><b>Playlist is empty!</b><br /><br />", gomble.BotUserState.ChannelId)
 		}
+	} else if strings.HasPrefix(e.Message, "#help") {
+		helpmessage := `
+		<br />
+		<br />
+
+		I can play music from YouTube if you send a message like:<br />
+		<br />
+
+		<b>#play https://youtu.be/dQw4w9WgXcQ</b><br />
+		<br />
+
+		You can also <b>#pause</b> and <b>#resume</b> the music.<br />
+		You can also <b>#add https://another-youtube.link</b> more songs to the playlist.<br />
+		<br />
+
+		Have fun!
+		<br />
+		`
+		gomble.SendMessageToChannel(helpmessage, gomble.BotUserState.ChannelId)
 	}
 }
 
