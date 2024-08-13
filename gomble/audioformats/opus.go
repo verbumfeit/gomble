@@ -13,6 +13,10 @@ static int wopusEncoderCtlSetBitrate(OpusEncoder *st, int bitrate) {
 static int wopusEncoderCtlSetVbr(OpusEncoder *st, int vbr) {
     return opus_encoder_ctl(st, OPUS_SET_VBR(vbr));
 }
+
+static int wopusEncoderCtlSetSignal(OpusEncoder *st, int signaltype) {
+    return opus_encoder_ctl(st, OPUS_SET_SIGNAL(signaltype));
+}
 */
 import "C"
 import (
@@ -46,7 +50,7 @@ const (
 	// number of channels to use (2 for Stereo, 1 for Mono).
 	OPUS_CHANNELS = 2
 
-	OPUS_BITRATE=192000 // Opus at 128 KB/s (VBR) is pretty much transparentk
+	OPUS_BITRATE = 192000 // Opus at 128 KB/s (VBR) is pretty much transparentk
 	//-1 means MAX_BITRATE
 	// MAX_BITRATE means libopus will use as much space it can put in opus packets. So it's controlled by the MAX_PACKET_SIZE in some way.
 
@@ -84,10 +88,10 @@ type OpusDecoder struct {
 	channels    int
 }
 
-//[in]	Fs	opus_int32: Sampling rate of input signal (Hz) This must be one of 8000, 12000, 16000, 24000, or 48000.
-//[in]	channels	int: Number of channels (1 or 2) in input signal
-//[in]	application	int: Coding mode (OPUS_APPLICATION_VOIP/OPUS_APPLICATION_AUDIO/OPUS_APPLICATION_RESTRICTED_LOWDELAY). This parameter is currently ignored and instead OPUS_APPLICATION_AUDIO will be used
-//[out]	error	int*: Error codes
+// [in]	Fs	opus_int32: Sampling rate of input signal (Hz) This must be one of 8000, 12000, 16000, 24000, or 48000.
+// [in]	channels	int: Number of channels (1 or 2) in input signal
+// [in]	application	int: Coding mode (OPUS_APPLICATION_VOIP/OPUS_APPLICATION_AUDIO/OPUS_APPLICATION_RESTRICTED_LOWDELAY). This parameter is currently ignored and instead OPUS_APPLICATION_AUDIO will be used
+// [out]	error	int*: Error codes
 func NewOpusEncoder() (*OpusEncoder, error) {
 	var enc OpusEncoder
 	//var err int
@@ -104,6 +108,9 @@ func NewOpusEncoder() (*OpusEncoder, error) {
 		return nil, err
 	}
 	if err := enc.CtlSetVbr(OPUS_VBR); err != nil {
+		return nil, err
+	}
+	if err := enc.CtlSetSignalType(OPUS_SIGNAL_MUSIC); err != nil {
 		return nil, err
 	}
 	return &enc, nil
@@ -142,11 +149,19 @@ func (enc *OpusEncoder) CtlSetVbr(vbr int) error {
 	return nil
 }
 
-//[in]	st	OpusEncoder*: Encoder state
-//[in]	pcm	opus_int16*: Input signal (interleaved if 2 channels). length is frame_size*channels*sizeof(opus_int16)
-//[in]	frame_size	int: Number of samples per channel in the input signal. This must be an Opus frame size for the encoder's sampling rate. For example, at 48 kHz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10 ms (480 samples at 48 kHz) will prevent the encoder from using the LPC or hybrid modes.
-//[out]	data	unsigned char*: Output payload. This must contain storage for at least max_data_bytes.
-//[in]	max_data_bytes	opus_int32: Size of the allocated memory for the output payload. This may be used to impose an upper limit on the instant bitrate, but should not be used as the only bitrate control. Use OPUS_SET_BITRATE to control the bitrate.
+func (enc *OpusEncoder) CtlSetSignalType(signaltype int) error {
+	err := C.wopusEncoderCtlSetSignal(enc.cencoder, C.int(signaltype))
+	if err < 0 {
+		return getOpusError("Gopus_encoder_ctl_set_signal_type error: ", int32(err))
+	}
+	return nil
+}
+
+// [in]	st	OpusEncoder*: Encoder state
+// [in]	pcm	opus_int16*: Input signal (interleaved if 2 channels). length is frame_size*channels*sizeof(opus_int16)
+// [in]	frame_size	int: Number of samples per channel in the input signal. This must be an Opus frame size for the encoder's sampling rate. For example, at 48 kHz the permitted values are 120, 240, 480, 960, 1920, and 2880. Passing in a duration of less than 10 ms (480 samples at 48 kHz) will prevent the encoder from using the LPC or hybrid modes.
+// [out]	data	unsigned char*: Output payload. This must contain storage for at least max_data_bytes.
+// [in]	max_data_bytes	opus_int32: Size of the allocated memory for the output payload. This may be used to impose an upper limit on the instant bitrate, but should not be used as the only bitrate control. Use OPUS_SET_BITRATE to control the bitrate.
 // returns The length of the encoded packet (in bytes) on success or a negative error code (see Error codes) on failure.
 func (enc *OpusEncoder) Encode(pcm []int16) ([]byte, error) {
 	var data [512]byte
